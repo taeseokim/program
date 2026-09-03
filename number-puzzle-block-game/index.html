@@ -190,6 +190,55 @@
     outline-offset: 2px;
   }
 
+  .photo-row {
+    margin-bottom: 16px;
+  }
+  .photo-setup {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .photo-active {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--plate-bg);
+    border-radius: 14px;
+    padding: 8px 10px;
+  }
+  .photo-thumb {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    object-fit: cover;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.25);
+    flex-shrink: 0;
+  }
+  .photo-active-text {
+    flex: 1;
+    min-width: 0;
+  }
+  .photo-active-text strong {
+    display: block;
+    font-family: "Baloo 2", sans-serif;
+    font-size: 13.5px;
+  }
+  .link-btn {
+    background: none;
+    border: none;
+    padding: 0;
+    font-family: "Nunito Sans", sans-serif;
+    font-size: 11.5px;
+    font-weight: 800;
+    color: var(--lamp);
+    text-decoration: underline;
+    cursor: pointer;
+  }
+  .link-btn:focus-visible {
+    outline: 3px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+
   .win-banner {
     max-height: 0;
     overflow: hidden;
@@ -237,6 +286,7 @@
   }
 
   .tile {
+    position: relative;
     width: 100%;
     height: 100%;
     border: none;
@@ -250,6 +300,7 @@
     align-items: center;
     justify-content: center;
     background: hsl(var(--hue) var(--tile-s) var(--tile-l));
+    background-repeat: no-repeat;
     box-shadow:
       inset 0 2px 0 rgba(255, 255, 255, 0.35),
       inset 0 -4px 0 rgba(0, 0, 0, 0.22),
@@ -270,6 +321,20 @@
   .tile:focus-visible {
     outline: 3px solid var(--focus-ring);
     outline-offset: 2px;
+  }
+
+  .tile-badge {
+    position: absolute;
+    top: 3px;
+    left: 4px;
+    font-family: "Nunito Sans", sans-serif;
+    font-size: 10px;
+    font-weight: 800;
+    background: rgba(0, 0, 0, 0.45);
+    color: #fff;
+    border-radius: 6px;
+    padding: 1px 5px;
+    pointer-events: none;
   }
 
   .tile.pop { animation: pop 0.22s ease; }
@@ -342,6 +407,9 @@
       <button class="diff-btn" data-level="hard" role="tab">고급 5×5</button>
     </div>
 
+    <input type="file" id="photoInput" accept="image/*" capture="user" hidden>
+    <div class="photo-row" id="photoRow"></div>
+
     <div class="win-banner" id="winBanner">🎉 완성! 블록을 다 맞췄어요</div>
 
     <div class="board" id="board" role="group"></div>
@@ -374,6 +442,8 @@
   let seconds = 0;
   let started = false;
   let won = false;
+  let mode = 'numbers'; // 'numbers' | 'photo'
+  let photoDataUrl = null;
 
   const trayEl = document.getElementById('tray');
   const boardEl = document.getElementById('board');
@@ -383,6 +453,8 @@
   const bestEl = document.getElementById('best');
   const winBanner = document.getElementById('winBanner');
   const diffButtons = Array.from(document.querySelectorAll('.diff-btn'));
+  const photoRow = document.getElementById('photoRow');
+  const photoInput = document.getElementById('photoInput');
 
   function loadBestMap() {
     try { return JSON.parse(localStorage.getItem(BEST_KEY)) || {}; } catch { return {}; }
@@ -472,12 +544,29 @@
       if (val !== 0) {
         const btn = document.createElement('button');
         btn.className = 'tile';
-        btn.style.setProperty('--hue', hueForValue(val));
-        btn.textContent = val;
         btn.disabled = won || !isAdjacentToEmpty(idx);
-        btn.setAttribute('aria-label', `숫자 ${val} 블록`);
         if (idx === animatedIdx) btn.classList.add('pop');
         btn.addEventListener('click', () => handleMove(idx));
+
+        if (mode === 'photo' && photoDataUrl) {
+          const destRow = Math.floor((val - 1) / COLS);
+          const destCol = (val - 1) % COLS;
+          const posX = COLS === 1 ? 0 : (destCol / (COLS - 1)) * 100;
+          const posY = ROWS === 1 ? 0 : (destRow / (ROWS - 1)) * 100;
+          btn.style.backgroundImage = `url(${photoDataUrl})`;
+          btn.style.backgroundSize = `${COLS * 100}% ${ROWS * 100}%`;
+          btn.style.backgroundPosition = `${posX}% ${posY}%`;
+          btn.setAttribute('aria-label', `사진 조각 ${val}`);
+          const badge = document.createElement('span');
+          badge.className = 'tile-badge';
+          badge.textContent = val;
+          btn.appendChild(badge);
+        } else {
+          btn.style.setProperty('--hue', hueForValue(val));
+          btn.textContent = val;
+          btn.setAttribute('aria-label', `숫자 ${val} 블록`);
+        }
+
         slot.appendChild(btn);
       }
       boardEl.appendChild(slot);
@@ -511,6 +600,7 @@
     if (isSolved(tiles)) {
       won = true;
       stopTimer();
+      winBanner.textContent = mode === 'photo' ? '🎉 완성! 사진을 다 맞췄어요' : '🎉 완성! 블록을 다 맞췄어요';
       winBanner.classList.add('show');
       const bestMap = loadBestMap();
       const best = bestMap[level];
@@ -534,13 +624,100 @@
     trayEl.style.maxWidth = `${cfg.trayMax}px`;
     boardEl.style.gridTemplateColumns = `repeat(${COLS}, 1fr)`;
     boardEl.style.gap = `${cfg.gap}px`;
-    boardEl.setAttribute('aria-label', `${cfg.label} 숫자 블록 퍼즐판`);
-    subtitleEl.textContent = `빈칸 옆 블록을 눌러 1→${SIZE - 1} 순서로 밀어 넣으세요`;
+    boardEl.setAttribute('aria-label', `${cfg.label} 퍼즐판`);
+    updateSubtitle();
 
     diffButtons.forEach(btn => {
       btn.classList.toggle('active', btn.dataset.level === level);
       btn.setAttribute('aria-selected', String(btn.dataset.level === level));
     });
+  }
+
+  function updateSubtitle() {
+    const total = SIZE - 1;
+    subtitleEl.textContent = mode === 'photo'
+      ? `빈칸 옆 조각을 눌러 사진을 완성해보세요 (${total}조각)`
+      : `빈칸 옆 블록을 눌러 1→${total} 순서로 밀어 넣으세요`;
+  }
+
+  function updatePhotoUI() {
+    photoRow.innerHTML = '';
+    if (!photoDataUrl) {
+      const wrap = document.createElement('div');
+      wrap.className = 'photo-setup';
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'action btn-lamp';
+      btn.textContent = '📷 셀카로 퍼즐 만들기';
+      btn.addEventListener('click', () => photoInput.click());
+      wrap.appendChild(btn);
+      photoRow.appendChild(wrap);
+      return;
+    }
+
+    const wrap = document.createElement('div');
+    wrap.className = 'photo-active';
+
+    const thumb = document.createElement('img');
+    thumb.className = 'photo-thumb';
+    thumb.src = photoDataUrl;
+    thumb.alt = '촬영한 사진';
+    wrap.appendChild(thumb);
+
+    const text = document.createElement('div');
+    text.className = 'photo-active-text';
+    const title = document.createElement('strong');
+    title.textContent = mode === 'photo' ? '내 사진 퍼즐' : '내 사진 (번호 블록 보는 중)';
+    text.appendChild(title);
+    const toggle = document.createElement('button');
+    toggle.type = 'button';
+    toggle.className = 'link-btn';
+    toggle.textContent = mode === 'photo' ? '번호 블록으로 보기' : '내 사진으로 보기';
+    toggle.addEventListener('click', toggleMode);
+    text.appendChild(toggle);
+    wrap.appendChild(text);
+
+    const retake = document.createElement('button');
+    retake.type = 'button';
+    retake.className = 'action btn-quiet';
+    retake.textContent = '다시 찍기';
+    retake.addEventListener('click', () => photoInput.click());
+    wrap.appendChild(retake);
+
+    photoRow.appendChild(wrap);
+  }
+
+  function toggleMode() {
+    mode = mode === 'photo' ? 'numbers' : 'photo';
+    updatePhotoUI();
+    updateSubtitle();
+    render();
+  }
+
+  function handlePhotoFile(file) {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const OUT = 480;
+        const cropSize = Math.min(img.naturalWidth, img.naturalHeight);
+        const sx = (img.naturalWidth - cropSize) / 2;
+        const sy = (img.naturalHeight - cropSize) / 2;
+        const canvas = document.createElement('canvas');
+        canvas.width = OUT;
+        canvas.height = OUT;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, sx, sy, cropSize, cropSize, 0, 0, OUT, OUT);
+        photoDataUrl = canvas.toDataURL('image/jpeg', 0.85);
+        mode = 'photo';
+        updatePhotoUI();
+        updateSubtitle();
+        newGame();
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
   }
 
   function newGame() {
@@ -664,7 +841,12 @@
   });
   document.getElementById('shuffleBtn').addEventListener('click', newGame);
   document.getElementById('resetBtn').addEventListener('click', newGame);
+  photoInput.addEventListener('change', () => {
+    handlePhotoFile(photoInput.files && photoInput.files[0]);
+    photoInput.value = '';
+  });
 
+  updatePhotoUI();
   newGame();
 })();
 </script>
