@@ -385,10 +385,36 @@
     color: var(--ink-soft);
     margin-top: 14px;
   }
+
+  .credit {
+    text-align: center;
+    font-size: 11px;
+    color: var(--ink-soft);
+    margin-top: 4px;
+  }
+
+  .festival-badge {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 14px;
+  }
+  .festival-badge span {
+    font-family: "Baloo 2", sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    color: var(--lamp-ink);
+    background: var(--lamp);
+    border-radius: 999px;
+    padding: 6px 16px;
+    box-shadow: 0 3px 0 rgba(0, 0, 0, 0.18);
+    transform: rotate(-1deg);
+  }
 </style>
 </head>
 <body>
   <main class="tray" id="tray">
+    <div class="festival-badge"><span>🎪 노원수학축전</span></div>
+
     <div class="header">
       <div class="label">
         <h1>블록 맞추기</h1>
@@ -420,6 +446,7 @@
     </div>
 
     <p class="hint">방향키(↑↓←→)로도 빈칸을 움직일 수 있어요</p>
+    <p class="credit">개발: 인덕과학기술고등학교</p>
   </main>
 
 <script>
