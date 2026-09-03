@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>블록 맞추기</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,800&display=swap">
+<style>
+  :root {
+    --wall: #e3e2da;
+    --tray: #d9c6a0;
+    --tray-edge: #c3ac80;
+    --tray-grain: rgba(140, 112, 68, 0.10);
+    --slot: #b89a6d;
+    --slot-shadow: rgba(60, 42, 16, 0.55);
+    --ink: #382c1e;
+    --ink-soft: #6b5c45;
+    --label-bg: #f4ecd8;
+    --label-edge: #cbb98d;
+    --plate-bg: rgba(255, 255, 255, 0.55);
+    --lamp: #c9631f;
+    --lamp-ink: #ffffff;
+    --btn-quiet-bg: #ece3cd;
+    --btn-quiet-ink: #4a3c28;
+    --win-bg: #dcecd9;
+    --win-ink: #2f6b3c;
+    --focus-ring: #c9631f;
+
+    --n1: #d95c4a; /* 코랄 */
+    --n2: #e0a13a; /* 마리골드 */
+    --n3: #4f9e6e; /* 리프그린 */
+    --n4: #3c8fa1; /* 스카이틸 */
+    --n5: #5a6bd8; /* 페리윙클 */
+    --n6: #8a5fb3; /* 플럼 */
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --wall: #1a1815;
+      --tray: #4a3624;
+      --tray-edge: #33241790;
+      --tray-grain: rgba(0, 0, 0, 0.22);
+      --slot: #2c1e12;
+      --slot-shadow: rgba(0, 0, 0, 0.7);
+      --ink: #f2e9d8;
+      --ink-soft: #c6b393;
+      --label-bg: #5a4530;
+      --label-edge: #71583a;
+      --plate-bg: rgba(0, 0, 0, 0.22);
+      --lamp: #e8a23c;
+      --lamp-ink: #2a1c08;
+      --btn-quiet-bg: #3a2c1c;
+      --btn-quiet-ink: #ecdfc4;
+      --win-bg: #22392a;
+      --win-ink: #8fd6a4;
+      --focus-ring: #e8a23c;
+
+      --n1: #e07361;
+      --n2: #e8b256;
+      --n3: #63b083;
+      --n4: #54a3b5;
+      --n5: #7484e6;
+      --n6: #a17bc9;
+    }
+  }
+  :root[data-theme="dark"] {
+    --wall: #1a1815;
+    --tray: #4a3624;
+    --tray-edge: #33241790;
+    --tray-grain: rgba(0, 0, 0, 0.22);
+    --slot: #2c1e12;
+    --slot-shadow: rgba(0, 0, 0, 0.7);
+    --ink: #f2e9d8;
+    --ink-soft: #c6b393;
+    --label-bg: #5a4530;
+    --label-edge: #71583a;
+    --plate-bg: rgba(0, 0, 0, 0.22);
+    --lamp: #e8a23c;
+    --lamp-ink: #2a1c08;
+    --btn-quiet-bg: #3a2c1c;
+    --btn-quiet-ink: #ecdfc4;
+    --win-bg: #22392a;
+    --win-ink: #8fd6a4;
+    --focus-ring: #e8a23c;
+
+    --n1: #e07361;
+    --n2: #e8b256;
+    --n3: #63b083;
+    --n4: #54a3b5;
+    --n5: #7484e6;
+    --n6: #a17bc9;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--wall);
+    font-family: "Nunito Sans", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+    color: var(--ink);
+    padding: 28px 18px;
+  }
+
+  .tray {
+    width: 100%;
+    max-width: 560px;
+    background:
+      repeating-linear-gradient(100deg, var(--tray-grain) 0 2px, transparent 2px 14px),
+      var(--tray);
+    border-radius: 28px;
+    padding: 26px 24px 28px;
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.25) inset,
+      0 -6px 0 var(--tray-edge) inset,
+      0 18px 34px rgba(30, 20, 6, 0.28);
+  }
+
+  .header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 14px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+
+  .label {
+    background: var(--label-bg);
+    border: 2px solid var(--label-edge);
+    border-radius: 10px;
+    padding: 8px 16px;
+    transform: rotate(-1.2deg);
+  }
+  .label h1 {
+    margin: 0;
+    font-family: "Baloo 2", "Nunito Sans", sans-serif;
+    font-weight: 700;
+    font-size: 22px;
+    letter-spacing: 0.2px;
+  }
+  .label p {
+    margin: 2px 0 0;
+    font-size: 12.5px;
+    color: var(--ink-soft);
+  }
+
+  .plates {
+    display: flex;
+    gap: 8px;
+  }
+  .plate {
+    background: var(--plate-bg);
+    border-radius: 12px;
+    padding: 7px 12px;
+    min-width: 68px;
+    text-align: center;
+  }
+  .plate .k {
+    display: block;
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--ink-soft);
+    font-weight: 800;
+  }
+  .plate .v {
+    display: block;
+    font-family: "Baloo 2", sans-serif;
+    font-size: 16px;
+    font-variant-numeric: tabular-nums;
+    margin-top: 1px;
+  }
+
+  .win-banner {
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    transition: max-height 0.3s ease, opacity 0.3s ease, margin 0.3s ease;
+    background: var(--win-bg);
+    color: var(--win-ink);
+    border-radius: 12px;
+    font-weight: 800;
+    font-family: "Baloo 2", sans-serif;
+    text-align: center;
+    padding: 0 14px;
+  }
+  .win-banner.show {
+    max-height: 60px;
+    opacity: 1;
+    padding: 11px 14px;
+    margin-bottom: 16px;
+  }
+
+  .board {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 7px;
+    margin-bottom: 22px;
+  }
+
+  .slot {
+    aspect-ratio: 1 / 1;
+    border-radius: 12px;
+    background: var(--slot);
+    box-shadow:
+      inset 0 3px 7px var(--slot-shadow),
+      inset 0 -1px 0 rgba(255, 255, 255, 0.06);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 5px;
+  }
+
+  .tile {
+    width: 100%;
+    height: 100%;
+    border: none;
+    border-radius: 8px;
+    font-family: "Baloo 2", sans-serif;
+    font-weight: 800;
+    font-size: clamp(19px, 5.4vw, 27px);
+    color: #fff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow:
+      inset 0 2px 0 rgba(255, 255, 255, 0.35),
+      inset 0 -4px 0 rgba(0, 0, 0, 0.22),
+      0 3px 6px rgba(0, 0, 0, 0.25);
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
+  }
+  .tile:active {
+    transform: translateY(2px) scale(0.97);
+    box-shadow:
+      inset 0 2px 0 rgba(255, 255, 255, 0.25),
+      inset 0 -2px 0 rgba(0, 0, 0, 0.22);
+  }
+  .tile:disabled {
+    cursor: default;
+    filter: saturate(0.7) brightness(0.9);
+    opacity: 0.55;
+  }
+  .tile:focus-visible {
+    outline: 3px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+  .tile.n1 { background: var(--n1); }
+  .tile.n2 { background: var(--n2); }
+  .tile.n3 { background: var(--n3); }
+  .tile.n4 { background: var(--n4); }
+  .tile.n5 { background: var(--n5); }
+  .tile.n6 { background: var(--n6); }
+
+  .tile.pop { animation: pop 0.22s ease; }
+  @keyframes pop {
+    0% { transform: scale(1); }
+    45% { transform: scale(1.14); }
+    100% { transform: scale(1); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .tile, .win-banner { transition: none; animation: none; }
+  }
+
+  .controls {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+  }
+  button.action {
+    font-family: "Nunito Sans", sans-serif;
+    border: none;
+    border-radius: 999px;
+    padding: 11px 20px;
+    font-size: 14px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: filter 0.15s ease, transform 0.1s ease;
+  }
+  button.action:active { transform: translateY(1px); }
+  .btn-lamp {
+    background: var(--lamp);
+    color: var(--lamp-ink);
+    box-shadow: 0 3px 0 rgba(0,0,0,0.18);
+  }
+  .btn-lamp:hover { filter: brightness(1.07); }
+  .btn-quiet {
+    background: var(--btn-quiet-bg);
+    color: var(--btn-quiet-ink);
+  }
+  .btn-quiet:hover { filter: brightness(0.96); }
+  button.action:focus-visible {
+    outline: 3px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+
+  .hint {
+    text-align: center;
+    font-size: 11.5px;
+    color: var(--ink-soft);
+    margin-top: 14px;
+  }
+</style>
+</head>
+<body>
+  <main class="tray">
+    <div class="header">
+      <div class="label">
+        <h1>블록 맞추기</h1>
+        <p>빈칸 옆 블록을 눌러 1→6 순서로 밀어 넣으세요</p>
+      </div>
+      <div class="plates">
+        <div class="plate"><span class="k">이동</span><span class="v" id="moves">0</span></div>
+        <div class="plate"><span class="k">시간</span><span class="v" id="timer">00:00</span></div>
+        <div class="plate"><span class="k">최고</span><span class="v" id="best">-</span></div>
+      </div>
+    </div>
+
+    <div class="win-banner" id="winBanner">🎉 완성! 블록을 다 맞췄어요</div>
+
+    <div class="board" id="board" role="group" aria-label="숫자 블록 퍼즐판"></div>
+
+    <div class="controls">
+      <button class="action btn-quiet" id="resetBtn">다시 섞기</button>
+      <button class="action btn-lamp" id="shuffleBtn">새 게임</button>
+    </div>
+
+    <p class="hint">← → 방향키로도 블록을 밀 수 있어요</p>
+  </main>
+
+<script>
+(() => {
+  const SIZE = 7;
+  const SOLVED = [1, 2, 3, 4, 5, 6, 0]; // 0 = 빈칸, 목표는 오름차순 + 빈칸이 맨 끝
+  let tiles = [...SOLVED];
+  let moves = 0;
+  let timerInterval = null;
+  let seconds = 0;
+  let started = false;
+  let won = false;
+
+  const boardEl = document.getElementById('board');
+  const movesEl = document.getElementById('moves');
+  const timerEl = document.getElementById('timer');
+  const bestEl = document.getElementById('best');
+  const winBanner = document.getElementById('winBanner');
+
+  const BEST_KEY = 'blockPuzzleBest';
+
+  function loadBest() {
+    try { return JSON.parse(localStorage.getItem(BEST_KEY)); } catch { return null; }
+  }
+
+  function renderBest() {
+    const best = loadBest();
+    bestEl.textContent = best ? `${best.moves}회` : '-';
+  }
+
+  function formatTime(s) {
+    const m = Math.floor(s / 60).toString().padStart(2, '0');
+    const sec = (s % 60).toString().padStart(2, '0');
+    return `${m}:${sec}`;
+  }
+
+  function startTimer() {
+    stopTimer();
+    seconds = 0;
+    timerEl.textContent = formatTime(seconds);
+    timerInterval = setInterval(() => {
+      seconds++;
+      timerEl.textContent = formatTime(seconds);
+    }, 1000);
+  }
+
+  function stopTimer() {
+    if (timerInterval) clearInterval(timerInterval);
+    timerInterval = null;
+  }
+
+  function isSolved(arr) {
+    return arr.every((v, i) => v === SOLVED[i]);
+  }
+
+  function shuffle() {
+    let arr = [...SOLVED];
+    let emptyIdx = arr.indexOf(0);
+    let prevIdx = -1;
+    const shuffleMoves = 150 + Math.floor(Math.random() * 50);
+
+    for (let i = 0; i < shuffleMoves; i++) {
+      const neighbors = [];
+      if (emptyIdx - 1 >= 0) neighbors.push(emptyIdx - 1);
+      if (emptyIdx + 1 < SIZE) neighbors.push(emptyIdx + 1);
+      const candidates = neighbors.filter(n => n !== prevIdx);
+      const pickFrom = candidates.length ? candidates : neighbors;
+      const target = pickFrom[Math.floor(Math.random() * pickFrom.length)];
+
+      [arr[emptyIdx], arr[target]] = [arr[target], arr[emptyIdx]];
+      prevIdx = emptyIdx;
+      emptyIdx = target;
+    }
+
+    if (isSolved(arr)) return shuffle();
+    return arr;
+  }
+
+  function isAdjacentToEmpty(idx) {
+    return Math.abs(idx - tiles.indexOf(0)) === 1;
+  }
+
+  function render(animatedIdx = null) {
+    boardEl.innerHTML = '';
+    tiles.forEach((val, idx) => {
+      const slot = document.createElement('div');
+      slot.className = 'slot';
+      if (val !== 0) {
+        const btn = document.createElement('button');
+        btn.className = `tile n${val}`;
+        btn.textContent = val;
+        btn.disabled = won || !isAdjacentToEmpty(idx);
+        btn.setAttribute('aria-label', `숫자 ${val} 블록`);
+        if (idx === animatedIdx) btn.classList.add('pop');
+        btn.addEventListener('click', () => handleMove(idx));
+        slot.appendChild(btn);
+      }
+      boardEl.appendChild(slot);
+    });
+  }
+
+  function handleMove(idx) {
+    if (won || !isAdjacentToEmpty(idx)) return;
+
+    if (!started) {
+      started = true;
+      startTimer();
+    }
+
+    const emptyIdx = tiles.indexOf(0);
+    [tiles[idx], tiles[emptyIdx]] = [tiles[emptyIdx], tiles[idx]];
+    moves++;
+    movesEl.textContent = moves;
+    render(emptyIdx);
+
+    if (isSolved(tiles)) {
+      won = true;
+      stopTimer();
+      winBanner.classList.add('show');
+      const best = loadBest();
+      if (!best || moves < best.moves) {
+        localStorage.setItem(BEST_KEY, JSON.stringify({ moves, seconds }));
+        renderBest();
+      }
+      render();
+    }
+  }
+
+  function newGame() {
+    tiles = shuffle();
+    moves = 0;
+    seconds = 0;
+    started = false;
+    won = false;
+    stopTimer();
+    timerEl.textContent = '00:00';
+    movesEl.textContent = '0';
+    winBanner.classList.remove('show');
+    render();
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (won) return;
+    const emptyIdx = tiles.indexOf(0);
+    if (e.key === 'ArrowLeft' && emptyIdx + 1 < SIZE) handleMove(emptyIdx + 1);
+    else if (e.key === 'ArrowRight' && emptyIdx - 1 >= 0) handleMove(emptyIdx - 1);
+  });
+
+  document.getElementById('shuffleBtn').addEventListener('click', newGame);
+  document.getElementById('resetBtn').addEventListener('click', newGame);
+
+  renderBest();
+  newGame();
+})();
+</script>
+</body>
+</html>
