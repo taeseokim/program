@@ -27,12 +27,14 @@
     --win-ink: #2f6b3c;
     --focus-ring: #c9631f;
 
-    --n1: #d95c4a; /* 코랄 */
-    --n2: #e0a13a; /* 마리골드 */
-    --n3: #4f9e6e; /* 리프그린 */
-    --n4: #3c8fa1; /* 스카이틸 */
-    --n5: #5a6bd8; /* 페리윙클 */
-    --n6: #8a5fb3; /* 플럼 */
+    --n1: #d9584a; /* 코랄 */
+    --n2: #e08a3c; /* 탠저린 */
+    --n3: #e0b83c; /* 마리골드 */
+    --n4: #4f9e6e; /* 리프그린 */
+    --n5: #3c8fa1; /* 스카이틸 */
+    --n6: #4a7fd0; /* 스카이블루 */
+    --n7: #5a6bd8; /* 페리윙클 */
+    --n8: #8a5fb3; /* 플럼 */
   }
 
   @media (prefers-color-scheme: dark) {
@@ -57,11 +59,13 @@
       --focus-ring: #e8a23c;
 
       --n1: #e07361;
-      --n2: #e8b256;
-      --n3: #63b083;
-      --n4: #54a3b5;
-      --n5: #7484e6;
-      --n6: #a17bc9;
+      --n2: #e8a860;
+      --n3: #e8c860;
+      --n4: #63b083;
+      --n5: #54a3b5;
+      --n6: #5f95d9;
+      --n7: #7484e6;
+      --n8: #a17bc9;
     }
   }
   :root[data-theme="dark"] {
@@ -85,11 +89,13 @@
     --focus-ring: #e8a23c;
 
     --n1: #e07361;
-    --n2: #e8b256;
-    --n3: #63b083;
-    --n4: #54a3b5;
-    --n5: #7484e6;
-    --n6: #a17bc9;
+    --n2: #e8a860;
+    --n3: #e8c860;
+    --n4: #63b083;
+    --n5: #54a3b5;
+    --n6: #5f95d9;
+    --n7: #7484e6;
+    --n8: #a17bc9;
   }
 
   * { box-sizing: border-box; }
@@ -108,7 +114,7 @@
 
   .tray {
     width: 100%;
-    max-width: 560px;
+    max-width: 420px;
     background:
       repeating-linear-gradient(100deg, var(--tray-grain) 0 2px, transparent 2px 14px),
       var(--tray);
@@ -198,8 +204,8 @@
 
   .board {
     display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 7px;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 9px;
     margin-bottom: 22px;
   }
 
@@ -223,7 +229,7 @@
     border-radius: 8px;
     font-family: "Baloo 2", sans-serif;
     font-weight: 800;
-    font-size: clamp(19px, 5.4vw, 27px);
+    font-size: clamp(28px, 11vw, 44px);
     color: #fff;
     cursor: pointer;
     display: flex;
@@ -256,6 +262,8 @@
   .tile.n4 { background: var(--n4); }
   .tile.n5 { background: var(--n5); }
   .tile.n6 { background: var(--n6); }
+  .tile.n7 { background: var(--n7); }
+  .tile.n8 { background: var(--n8); }
 
   .tile.pop { animation: pop 0.22s ease; }
   @keyframes pop {
@@ -312,7 +320,7 @@
     <div class="header">
       <div class="label">
         <h1>블록 맞추기</h1>
-        <p>빈칸 옆 블록을 눌러 1→6 순서로 밀어 넣으세요</p>
+        <p>빈칸 옆 블록을 눌러 1→8 순서로 밀어 넣으세요</p>
       </div>
       <div class="plates">
         <div class="plate"><span class="k">이동</span><span class="v" id="moves">0</span></div>
@@ -330,13 +338,15 @@
       <button class="action btn-lamp" id="shuffleBtn">새 게임</button>
     </div>
 
-    <p class="hint">← → 방향키로도 블록을 밀 수 있어요</p>
+    <p class="hint">방향키(↑↓←→)로도 빈칸을 움직일 수 있어요</p>
   </main>
 
 <script>
 (() => {
-  const SIZE = 7;
-  const SOLVED = [1, 2, 3, 4, 5, 6, 0]; // 0 = 빈칸, 목표는 오름차순 + 빈칸이 맨 끝
+  const COLS = 3;
+  const ROWS = 3;
+  const SIZE = COLS * ROWS;
+  const SOLVED = [1, 2, 3, 4, 5, 6, 7, 8, 0]; // 0 = 빈칸, 목표는 왼쪽 위부터 오름차순 + 빈칸이 맨 끝
   let tiles = [...SOLVED];
   let moves = 0;
   let timerInterval = null;
@@ -386,6 +396,20 @@
     return arr.every((v, i) => v === SOLVED[i]);
   }
 
+  function rowOf(idx) { return Math.floor(idx / COLS); }
+  function colOf(idx) { return idx % COLS; }
+
+  function neighborsOf(idx) {
+    const r = rowOf(idx);
+    const c = colOf(idx);
+    const result = [];
+    if (r > 0) result.push(idx - COLS);
+    if (r < ROWS - 1) result.push(idx + COLS);
+    if (c > 0) result.push(idx - 1);
+    if (c < COLS - 1) result.push(idx + 1);
+    return result;
+  }
+
   function shuffle() {
     let arr = [...SOLVED];
     let emptyIdx = arr.indexOf(0);
@@ -393,9 +417,7 @@
     const shuffleMoves = 150 + Math.floor(Math.random() * 50);
 
     for (let i = 0; i < shuffleMoves; i++) {
-      const neighbors = [];
-      if (emptyIdx - 1 >= 0) neighbors.push(emptyIdx - 1);
-      if (emptyIdx + 1 < SIZE) neighbors.push(emptyIdx + 1);
+      const neighbors = neighborsOf(emptyIdx);
       const candidates = neighbors.filter(n => n !== prevIdx);
       const pickFrom = candidates.length ? candidates : neighbors;
       const target = pickFrom[Math.floor(Math.random() * pickFrom.length)];
@@ -410,7 +432,7 @@
   }
 
   function isAdjacentToEmpty(idx) {
-    return Math.abs(idx - tiles.indexOf(0)) === 1;
+    return neighborsOf(tiles.indexOf(0)).includes(idx);
   }
 
   function render(animatedIdx = null) {
@@ -475,8 +497,15 @@
   document.addEventListener('keydown', (e) => {
     if (won) return;
     const emptyIdx = tiles.indexOf(0);
-    if (e.key === 'ArrowLeft' && emptyIdx + 1 < SIZE) handleMove(emptyIdx + 1);
-    else if (e.key === 'ArrowRight' && emptyIdx - 1 >= 0) handleMove(emptyIdx - 1);
+    const r = rowOf(emptyIdx);
+    const c = colOf(emptyIdx);
+    // 방향키는 "빈칸이 이동하는 방향"을 뜻하므로, 그 방향에 있는 블록을 빈칸으로 옮긴다.
+    if (e.key === 'ArrowUp' && r < ROWS - 1) handleMove(emptyIdx + COLS);
+    else if (e.key === 'ArrowDown' && r > 0) handleMove(emptyIdx - COLS);
+    else if (e.key === 'ArrowLeft' && c < COLS - 1) handleMove(emptyIdx + 1);
+    else if (e.key === 'ArrowRight' && c > 0) handleMove(emptyIdx - 1);
+    else return;
+    e.preventDefault();
   });
 
   document.getElementById('shuffleBtn').addEventListener('click', newGame);
