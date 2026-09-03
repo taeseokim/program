@@ -208,6 +208,12 @@
     opacity: 1;
     padding: 11px 14px;
     margin-bottom: 16px;
+    animation: winPop 0.5s ease;
+  }
+  @keyframes winPop {
+    0% { transform: scale(0.85); }
+    55% { transform: scale(1.06); }
+    100% { transform: scale(1); }
   }
 
   .board {
@@ -560,70 +566,77 @@
   }
 
   function launchConfetti() {
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    // 동작 최소화 설정이어도 폭죽을 완전히 없애지 않고, 더 짧고 약하게만 보여준다.
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const particleCount = reduced ? 50 : 150;
+    const duration = reduced ? 900 : 2600;
+    const spin = reduced ? 0 : 1;
 
-    const canvas = document.createElement('canvas');
-    canvas.style.cssText = 'position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none;z-index:999;';
-    document.body.appendChild(canvas);
-    const ctx = canvas.getContext('2d');
-    const dpr = window.devicePixelRatio || 1;
+    try {
+      const canvas = document.createElement('canvas');
+      canvas.style.cssText = 'position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none;z-index:2147483647;';
+      document.body.appendChild(canvas);
+      const ctx = canvas.getContext('2d');
+      const dpr = window.devicePixelRatio || 1;
 
-    function sizeCanvas() {
-      canvas.width = window.innerWidth * dpr;
-      canvas.height = window.innerHeight * dpr;
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    }
-    sizeCanvas();
-    window.addEventListener('resize', sizeCanvas);
-
-    const total = SIZE - 1;
-    const colors = Array.from({ length: total }, (_, i) => `hsl(${hueForValue(i + 1)} 70% 58%)`);
-    const originX = window.innerWidth / 2;
-    const originY = window.innerHeight * 0.28;
-
-    const particles = Array.from({ length: 140 }, () => {
-      const angle = Math.random() * Math.PI * 2;
-      const speed = 3 + Math.random() * 8;
-      return {
-        x: originX,
-        y: originY,
-        vx: Math.cos(angle) * speed,
-        vy: Math.sin(angle) * speed - 3,
-        size: 5 + Math.random() * 5,
-        rot: Math.random() * Math.PI * 2,
-        vr: (Math.random() - 0.5) * 0.35,
-        color: colors[Math.floor(Math.random() * colors.length)],
-      };
-    });
-
-    const gravity = 0.2;
-    const duration = 2600;
-    const start = performance.now();
-
-    function frame(now) {
-      const elapsed = now - start;
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      particles.forEach(p => {
-        p.vy += gravity;
-        p.x += p.vx;
-        p.y += p.vy;
-        p.rot += p.vr;
-        ctx.save();
-        ctx.globalAlpha = Math.max(0, 1 - elapsed / duration);
-        ctx.translate(p.x, p.y);
-        ctx.rotate(p.rot);
-        ctx.fillStyle = p.color;
-        ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.6);
-        ctx.restore();
-      });
-      if (elapsed < duration) {
-        requestAnimationFrame(frame);
-      } else {
-        window.removeEventListener('resize', sizeCanvas);
-        canvas.remove();
+      function sizeCanvas() {
+        canvas.width = window.innerWidth * dpr;
+        canvas.height = window.innerHeight * dpr;
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       }
+      sizeCanvas();
+      window.addEventListener('resize', sizeCanvas);
+
+      const total = SIZE - 1;
+      const colors = Array.from({ length: total }, (_, i) => `hsl(${hueForValue(i + 1)} 70% 58%)`);
+      const originX = window.innerWidth / 2;
+      const originY = window.innerHeight * 0.28;
+
+      const particles = Array.from({ length: particleCount }, () => {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = 3 + Math.random() * 8;
+        return {
+          x: originX,
+          y: originY,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed - 3,
+          size: 5 + Math.random() * 5,
+          rot: Math.random() * Math.PI * 2,
+          vr: (Math.random() - 0.5) * 0.35 * spin,
+          color: colors[Math.floor(Math.random() * colors.length)],
+        };
+      });
+
+      const gravity = 0.2;
+      const start = performance.now();
+
+      function frame(now) {
+        const elapsed = now - start;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach(p => {
+          p.vy += gravity;
+          p.x += p.vx;
+          p.y += p.vy;
+          p.rot += p.vr;
+          ctx.save();
+          ctx.globalAlpha = Math.max(0, 1 - elapsed / duration);
+          ctx.translate(p.x, p.y);
+          ctx.rotate(p.rot);
+          ctx.fillStyle = p.color;
+          ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.6);
+          ctx.restore();
+        });
+        if (elapsed < duration) {
+          requestAnimationFrame(frame);
+        } else {
+          window.removeEventListener('resize', sizeCanvas);
+          canvas.remove();
+        }
+      }
+      requestAnimationFrame(frame);
+    } catch (err) {
+      console.error('confetti failed to render', err);
     }
-    requestAnimationFrame(frame);
   }
 
   document.addEventListener('keydown', (e) => {
