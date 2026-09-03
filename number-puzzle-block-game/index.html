@@ -26,15 +26,8 @@
     --win-bg: #dcecd9;
     --win-ink: #2f6b3c;
     --focus-ring: #c9631f;
-
-    --n1: #d9584a; /* 코랄 */
-    --n2: #e08a3c; /* 탠저린 */
-    --n3: #e0b83c; /* 마리골드 */
-    --n4: #4f9e6e; /* 리프그린 */
-    --n5: #3c8fa1; /* 스카이틸 */
-    --n6: #4a7fd0; /* 스카이블루 */
-    --n7: #5a6bd8; /* 페리윙클 */
-    --n8: #8a5fb3; /* 플럼 */
+    --tile-s: 58%;
+    --tile-l: 53%;
   }
 
   @media (prefers-color-scheme: dark) {
@@ -57,15 +50,8 @@
       --win-bg: #22392a;
       --win-ink: #8fd6a4;
       --focus-ring: #e8a23c;
-
-      --n1: #e07361;
-      --n2: #e8a860;
-      --n3: #e8c860;
-      --n4: #63b083;
-      --n5: #54a3b5;
-      --n6: #5f95d9;
-      --n7: #7484e6;
-      --n8: #a17bc9;
+      --tile-s: 62%;
+      --tile-l: 60%;
     }
   }
   :root[data-theme="dark"] {
@@ -87,15 +73,8 @@
     --win-bg: #22392a;
     --win-ink: #8fd6a4;
     --focus-ring: #e8a23c;
-
-    --n1: #e07361;
-    --n2: #e8a860;
-    --n3: #e8c860;
-    --n4: #63b083;
-    --n5: #54a3b5;
-    --n6: #5f95d9;
-    --n7: #7484e6;
-    --n8: #a17bc9;
+    --tile-s: 62%;
+    --tile-l: 60%;
   }
 
   * { box-sizing: border-box; }
@@ -124,6 +103,7 @@
       0 1px 0 rgba(255, 255, 255, 0.25) inset,
       0 -6px 0 var(--tray-edge) inset,
       0 18px 34px rgba(30, 20, 6, 0.28);
+    transition: max-width 0.25s ease;
   }
 
   .header {
@@ -131,7 +111,7 @@
     align-items: flex-start;
     justify-content: space-between;
     gap: 14px;
-    margin-bottom: 20px;
+    margin-bottom: 16px;
     flex-wrap: wrap;
   }
 
@@ -163,7 +143,7 @@
     background: var(--plate-bg);
     border-radius: 12px;
     padding: 7px 12px;
-    min-width: 68px;
+    min-width: 60px;
     text-align: center;
   }
   .plate .k {
@@ -180,6 +160,34 @@
     font-size: 16px;
     font-variant-numeric: tabular-nums;
     margin-top: 1px;
+  }
+
+  .diff-row {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 16px;
+  }
+  .diff-btn {
+    flex: 1;
+    font-family: "Nunito Sans", sans-serif;
+    border: 2px solid transparent;
+    background: var(--plate-bg);
+    color: var(--ink-soft);
+    border-radius: 999px;
+    padding: 8px 6px;
+    font-size: 12.5px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  }
+  .diff-btn:hover { border-color: var(--lamp); }
+  .diff-btn.active {
+    background: var(--lamp);
+    color: var(--lamp-ink);
+  }
+  .diff-btn:focus-visible {
+    outline: 3px solid var(--focus-ring);
+    outline-offset: 2px;
   }
 
   .win-banner {
@@ -204,9 +212,9 @@
 
   .board {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
     gap: 9px;
     margin-bottom: 22px;
+    --tile-font: 28px;
   }
 
   .slot {
@@ -219,7 +227,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 5px;
+    padding: 4px;
   }
 
   .tile {
@@ -229,12 +237,13 @@
     border-radius: 8px;
     font-family: "Baloo 2", sans-serif;
     font-weight: 800;
-    font-size: clamp(28px, 11vw, 44px);
+    font-size: var(--tile-font);
     color: #fff;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
+    background: hsl(var(--hue) var(--tile-s) var(--tile-l));
     box-shadow:
       inset 0 2px 0 rgba(255, 255, 255, 0.35),
       inset 0 -4px 0 rgba(0, 0, 0, 0.22),
@@ -256,14 +265,6 @@
     outline: 3px solid var(--focus-ring);
     outline-offset: 2px;
   }
-  .tile.n1 { background: var(--n1); }
-  .tile.n2 { background: var(--n2); }
-  .tile.n3 { background: var(--n3); }
-  .tile.n4 { background: var(--n4); }
-  .tile.n5 { background: var(--n5); }
-  .tile.n6 { background: var(--n6); }
-  .tile.n7 { background: var(--n7); }
-  .tile.n8 { background: var(--n8); }
 
   .tile.pop { animation: pop 0.22s ease; }
   @keyframes pop {
@@ -272,7 +273,7 @@
     100% { transform: scale(1); }
   }
   @media (prefers-reduced-motion: reduce) {
-    .tile, .win-banner { transition: none; animation: none; }
+    .tile, .win-banner, .tray { transition: none; animation: none; }
   }
 
   .controls {
@@ -316,11 +317,11 @@
 </style>
 </head>
 <body>
-  <main class="tray">
+  <main class="tray" id="tray">
     <div class="header">
       <div class="label">
         <h1>블록 맞추기</h1>
-        <p>빈칸 옆 블록을 눌러 1→8 순서로 밀어 넣으세요</p>
+        <p id="subtitle">빈칸 옆 블록을 눌러 순서대로 맞춰보세요</p>
       </div>
       <div class="plates">
         <div class="plate"><span class="k">이동</span><span class="v" id="moves">0</span></div>
@@ -329,9 +330,15 @@
       </div>
     </div>
 
+    <div class="diff-row" role="tablist" aria-label="난이도 선택">
+      <button class="diff-btn" data-level="easy" role="tab">초급 3×3</button>
+      <button class="diff-btn" data-level="medium" role="tab">중급 4×4</button>
+      <button class="diff-btn" data-level="hard" role="tab">고급 5×5</button>
+    </div>
+
     <div class="win-banner" id="winBanner">🎉 완성! 블록을 다 맞췄어요</div>
 
-    <div class="board" id="board" role="group" aria-label="숫자 블록 퍼즐판"></div>
+    <div class="board" id="board" role="group"></div>
 
     <div class="controls">
       <button class="action btn-quiet" id="resetBtn">다시 섞기</button>
@@ -343,31 +350,40 @@
 
 <script>
 (() => {
-  const COLS = 3;
-  const ROWS = 3;
-  const SIZE = COLS * ROWS;
-  const SOLVED = [1, 2, 3, 4, 5, 6, 7, 8, 0]; // 0 = 빈칸, 목표는 왼쪽 위부터 오름차순 + 빈칸이 맨 끝
-  let tiles = [...SOLVED];
+  const DIFFICULTIES = {
+    easy:   { cols: 3, rows: 3, label: '초급', trayMax: 420, gap: 9 },
+    medium: { cols: 4, rows: 4, label: '중급', trayMax: 460, gap: 7 },
+    hard:   { cols: 5, rows: 5, label: '고급', trayMax: 520, gap: 6 },
+  };
+  const LEVEL_KEY = 'blockPuzzleLevel';
+  const BEST_KEY = 'blockPuzzleBest';
+
+  let level = localStorage.getItem(LEVEL_KEY) || 'easy';
+  if (!DIFFICULTIES[level]) level = 'easy';
+
+  let COLS, ROWS, SIZE, SOLVED;
+  let tiles = [];
   let moves = 0;
   let timerInterval = null;
   let seconds = 0;
   let started = false;
   let won = false;
 
+  const trayEl = document.getElementById('tray');
   const boardEl = document.getElementById('board');
+  const subtitleEl = document.getElementById('subtitle');
   const movesEl = document.getElementById('moves');
   const timerEl = document.getElementById('timer');
   const bestEl = document.getElementById('best');
   const winBanner = document.getElementById('winBanner');
+  const diffButtons = Array.from(document.querySelectorAll('.diff-btn'));
 
-  const BEST_KEY = 'blockPuzzleBest';
-
-  function loadBest() {
-    try { return JSON.parse(localStorage.getItem(BEST_KEY)); } catch { return null; }
+  function loadBestMap() {
+    try { return JSON.parse(localStorage.getItem(BEST_KEY)) || {}; } catch { return {}; }
   }
 
   function renderBest() {
-    const best = loadBest();
+    const best = loadBestMap()[level];
     bestEl.textContent = best ? `${best.moves}회` : '-';
   }
 
@@ -414,7 +430,7 @@
     let arr = [...SOLVED];
     let emptyIdx = arr.indexOf(0);
     let prevIdx = -1;
-    const shuffleMoves = 150 + Math.floor(Math.random() * 50);
+    const shuffleMoves = 120 + SIZE * 25 + Math.floor(Math.random() * 30);
 
     for (let i = 0; i < shuffleMoves; i++) {
       const neighbors = neighborsOf(emptyIdx);
@@ -435,6 +451,13 @@
     return neighborsOf(tiles.indexOf(0)).includes(idx);
   }
 
+  // 숫자 1은 빨강 계열, 마지막 숫자는 보라 계열이 되도록 색상환 일부를 고르게 나눠 쓴다.
+  function hueForValue(val) {
+    const total = SIZE - 1;
+    if (total <= 1) return 0;
+    return Math.round(-8 + (306 * (val - 1)) / (total - 1));
+  }
+
   function render(animatedIdx = null) {
     boardEl.innerHTML = '';
     tiles.forEach((val, idx) => {
@@ -442,7 +465,8 @@
       slot.className = 'slot';
       if (val !== 0) {
         const btn = document.createElement('button');
-        btn.className = `tile n${val}`;
+        btn.className = 'tile';
+        btn.style.setProperty('--hue', hueForValue(val));
         btn.textContent = val;
         btn.disabled = won || !isAdjacentToEmpty(idx);
         btn.setAttribute('aria-label', `숫자 ${val} 블록`);
@@ -452,6 +476,16 @@
       }
       boardEl.appendChild(slot);
     });
+    fitTileFont();
+  }
+
+  function fitTileFont() {
+    const slot = boardEl.querySelector('.slot');
+    if (!slot) return;
+    const size = slot.getBoundingClientRect().width;
+    if (size > 0) {
+      boardEl.style.setProperty('--tile-font', `${Math.max(14, Math.round(size * 0.4))}px`);
+    }
   }
 
   function handleMove(idx) {
@@ -472,16 +506,39 @@
       won = true;
       stopTimer();
       winBanner.classList.add('show');
-      const best = loadBest();
+      const bestMap = loadBestMap();
+      const best = bestMap[level];
       if (!best || moves < best.moves) {
-        localStorage.setItem(BEST_KEY, JSON.stringify({ moves, seconds }));
+        bestMap[level] = { moves, seconds };
+        localStorage.setItem(BEST_KEY, JSON.stringify(bestMap));
         renderBest();
       }
       render();
+      launchConfetti();
     }
   }
 
+  function applyLevelLayout() {
+    const cfg = DIFFICULTIES[level];
+    COLS = cfg.cols;
+    ROWS = cfg.rows;
+    SIZE = COLS * ROWS;
+    SOLVED = [...Array(SIZE - 1).keys()].map(n => n + 1).concat(0);
+
+    trayEl.style.maxWidth = `${cfg.trayMax}px`;
+    boardEl.style.gridTemplateColumns = `repeat(${COLS}, 1fr)`;
+    boardEl.style.gap = `${cfg.gap}px`;
+    boardEl.setAttribute('aria-label', `${cfg.label} 숫자 블록 퍼즐판`);
+    subtitleEl.textContent = `빈칸 옆 블록을 눌러 1→${SIZE - 1} 순서로 밀어 넣으세요`;
+
+    diffButtons.forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.level === level);
+      btn.setAttribute('aria-selected', String(btn.dataset.level === level));
+    });
+  }
+
   function newGame() {
+    applyLevelLayout();
     tiles = shuffle();
     moves = 0;
     seconds = 0;
@@ -491,7 +548,82 @@
     timerEl.textContent = '00:00';
     movesEl.textContent = '0';
     winBanner.classList.remove('show');
+    renderBest();
     render();
+  }
+
+  function setLevel(newLevel) {
+    if (!DIFFICULTIES[newLevel] || newLevel === level) return;
+    level = newLevel;
+    localStorage.setItem(LEVEL_KEY, level);
+    newGame();
+  }
+
+  function launchConfetti() {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    const canvas = document.createElement('canvas');
+    canvas.style.cssText = 'position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none;z-index:999;';
+    document.body.appendChild(canvas);
+    const ctx = canvas.getContext('2d');
+    const dpr = window.devicePixelRatio || 1;
+
+    function sizeCanvas() {
+      canvas.width = window.innerWidth * dpr;
+      canvas.height = window.innerHeight * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+    sizeCanvas();
+    window.addEventListener('resize', sizeCanvas);
+
+    const total = SIZE - 1;
+    const colors = Array.from({ length: total }, (_, i) => `hsl(${hueForValue(i + 1)} 70% 58%)`);
+    const originX = window.innerWidth / 2;
+    const originY = window.innerHeight * 0.28;
+
+    const particles = Array.from({ length: 140 }, () => {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 3 + Math.random() * 8;
+      return {
+        x: originX,
+        y: originY,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed - 3,
+        size: 5 + Math.random() * 5,
+        rot: Math.random() * Math.PI * 2,
+        vr: (Math.random() - 0.5) * 0.35,
+        color: colors[Math.floor(Math.random() * colors.length)],
+      };
+    });
+
+    const gravity = 0.2;
+    const duration = 2600;
+    const start = performance.now();
+
+    function frame(now) {
+      const elapsed = now - start;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      particles.forEach(p => {
+        p.vy += gravity;
+        p.x += p.vx;
+        p.y += p.vy;
+        p.rot += p.vr;
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, 1 - elapsed / duration);
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rot);
+        ctx.fillStyle = p.color;
+        ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.6);
+        ctx.restore();
+      });
+      if (elapsed < duration) {
+        requestAnimationFrame(frame);
+      } else {
+        window.removeEventListener('resize', sizeCanvas);
+        canvas.remove();
+      }
+    }
+    requestAnimationFrame(frame);
   }
 
   document.addEventListener('keydown', (e) => {
@@ -508,10 +640,18 @@
     e.preventDefault();
   });
 
+  let resizeTimer = null;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(fitTileFont, 100);
+  });
+
+  diffButtons.forEach(btn => {
+    btn.addEventListener('click', () => setLevel(btn.dataset.level));
+  });
   document.getElementById('shuffleBtn').addEventListener('click', newGame);
   document.getElementById('resetBtn').addEventListener('click', newGame);
 
-  renderBest();
   newGame();
 })();
 </script>
